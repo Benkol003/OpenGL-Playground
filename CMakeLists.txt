@@ -4,6 +4,9 @@ cmake_minimum_required(VERSION 3.24)
 
 project(LearnOpenGL C CXX) #C needed for GLAD
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/lib/)
 set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/lib/)
 
@@ -23,29 +26,32 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/glad/cmake glad_cmake)
 glad_add_library(glad_gl_core_33 STATIC API gl:core=3.3)
 
 ### GLM ###
-add_subdirectory(${CMAKE_SOURCE_DIR}/lib/glm/ glm)
+find_package(glm CONFIG REQUIRED)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 
 set(SOURCES
 ${CMAKE_SOURCE_DIR}/src/main.cpp
+${CMAKE_SOURCE_DIR}/src/icosphere.cpp
 )
 
 set(LIBS
+PRIVATE
 glfw
 glad_gl_core_33
-glm
 OpenGL::GL
+glm::glm
 )
 
 set(INCLUDES
+PUBLIC
 ${CMAKE_SOURCE_DIR}/lib/stb/
+${GLM_INCLUDE_DIR}
 )
 
 add_executable(main ${SOURCES})
 
-target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/src/)
+target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 include_directories(${INCLUDES})
 
@@ -53,8 +59,8 @@ target_link_libraries(main PUBLIC ${LIBS})
 
 ### cubes ###
 
-add_executable(cubes ${CMAKE_SOURCE_DIR}/src/cubes/main.cpp)
-target_include_directories(cubes PRIVATE ${CMAKE_SOURCE_DIR}/src/cubes/)
-target_link_libraries(cubes PUBLIC ${LIBS})
+#add_executable(cubes ${CMAKE_SOURCE_DIR}/src/cubes/main.cpp)
+#target_include_directories(cubes PRIVATE ${CMAKE_SOURCE_DIR}/src/cubes/)
+#target_link_libraries(cubes PUBLIC ${LIBS})
 
 

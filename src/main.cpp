@@ -1,9 +1,15 @@
 #include <iostream>
 #include <exception>
 #include <string>
+#include <tuple>
 
-#include "GLAD/gl.h"
+#include "glad/gl.h"
 #include "GLFW/glfw3.h"
+
+#include "glm/vec3.hpp"
+#include "glm/gtx/string_cast.hpp"
+
+#include "icosphere.hpp"
 
 void resize_callback(GLFWwindow* window, int width, int height) {
     if(width==height){
@@ -21,13 +27,10 @@ const int WINDOW_SIZE[2]={900,900};
 
 int main(int argc, char** argv){
 try{
-
     //initialise GLFW and window
     if(!glfwInit()){
         throw std::runtime_error("Failed to initialise GLFW");
     }
-
-
 
     //window setup
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); //TODO this is not current with what is defined in CMakeLists.txt/GLAD

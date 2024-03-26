@@ -10,8 +10,8 @@
 
 namespace shaders {
 
-    char vertexShaderPath[]="./shader.vs";
-    char fragmentShaderPath[]="./shader.fs";
+    char vertexShaderPath[]="./cubes/shader.vs";
+    char fragmentShaderPath[]="./cubes/shader.fs";
     unsigned int shaderProgram;
 
     //shader uniforms
