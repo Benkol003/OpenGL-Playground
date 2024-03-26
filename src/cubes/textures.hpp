@@ -10,7 +10,7 @@
 
 namespace textures{
 
-    std::string texFpaths[]={"./cubes/texture_2D_0.jpg","./cubes/texture_2D_1.jpg"};
+    std::string texFpaths[]={"./texture_2D_0.jpg","./texture_2D_1.jpg"};
     unsigned int textures[2];
 
         void loadTexture(std::string fPath,unsigned int glTexId, GLenum texUnit) {

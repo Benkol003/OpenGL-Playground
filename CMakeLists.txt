@@ -59,8 +59,8 @@ target_link_libraries(main PUBLIC ${LIBS})
 
 ### cubes ###
 
-#add_executable(cubes ${CMAKE_SOURCE_DIR}/src/cubes/main.cpp)
-#target_include_directories(cubes PRIVATE ${CMAKE_SOURCE_DIR}/src/cubes/)
-#target_link_libraries(cubes PUBLIC ${LIBS})
+add_executable(cubes ${CMAKE_SOURCE_DIR}/src/cubes/main.cpp)
+target_include_directories(cubes PRIVATE ${CMAKE_SOURCE_DIR}/src/cubes/)
+target_link_libraries(cubes PUBLIC ${LIBS})
 
 
