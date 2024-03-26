@@ -1,6 +1,5 @@
-# LearnOpenGL
+# OpenGL Playground
 Repository for learning and experimenting with OpenGL. 
-Thanks to https://learnopengl.com/.
 
 ## Targets:
 
@@ -9,10 +8,11 @@ Displays 10 different cubes that can be controlled. Use keys 0-9 to select a cub
 
 ## Building
 
-#### Installing glm
-cd /path/to/glm
-cmake -DGLM_BUILD_TESTS=OFF -DBUILD_SHARED_LIBS=OFF -B build . -GNinja
-cmake --build build -- all
-cmake --build build -- install
+Use CMake, build libraries from source via git submodules
 
-Use CMake - currently only tested on windows.
+#### Installing GLM
+Needs to be installed before compiling the project.
+cd /path/to/glm
+cmake -DGLM_BUILD_TESTS=OFF -DBUILD_SHARED_LIBS=OFF -B build . -GNinja  
+cmake --build build -- all  
+cmake --build build -- install  
