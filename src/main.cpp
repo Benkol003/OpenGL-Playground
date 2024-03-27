@@ -10,6 +10,7 @@
 #include "glm/gtx/string_cast.hpp"
 
 #include "icosphere.hpp"
+#include "shader.hpp"
 
 void resize_callback(GLFWwindow* window, int width, int height) {
     if(width==height){
@@ -55,6 +56,7 @@ try{
     glfwSetFramebufferSizeCallback(root, resize_callback);
     //glfwSetInputMode(root,GLFW_STICKY_KEYS,true);
 
+    shader::init();
 
     //main loop
     while(!glfwWindowShouldClose(root)){
