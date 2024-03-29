@@ -6,22 +6,18 @@
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 
+#define GLM_FORCE_MESSAGES
+#define GLM_FORCE_INTRINSICS //still need to check if intrinsics are being used
+//TODO add SSE/AVX to cmake
 #include "glm/vec3.hpp"
 #include "glm/gtx/string_cast.hpp"
+#include <glm/gtx/rotate_normalized_axis.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "icosphere.hpp"
 #include "shader.hpp"
-
-void resize_callback(GLFWwindow* window, int width, int height) {
-    if(width==height){
-        glViewport(0,0,width,height);
-    } else if (width<height) {
-        glViewport(0,0,height,height); //#TODO make appear that is anchored to top left, extends past bottom/left
-    } else if (width>height) {
-        glViewport(0,0,width,width);
-    }
-    
-}
+#include "renderer.hpp"
+#include "control.hpp"
 
 const int WINDOW_SIZE[2]={900,900};
 
@@ -43,6 +39,7 @@ try{
     if(!root) throw std::runtime_error("Failed to initialise GLFW window");
 
     glfwMakeContextCurrent(root);
+    glfwSetKeyCallback(root,keys_callback);
 
     //initialise GLAD
     int version = gladLoadGL(glfwGetProcAddress);
@@ -53,15 +50,33 @@ try{
 
 
     glViewport(0,0,WINDOW_SIZE[0], WINDOW_SIZE[1]);
-    glfwSetFramebufferSizeCallback(root, resize_callback);
+    //glfwSetFramebufferSizeCallback(root, resize_callback);
     //glfwSetInputMode(root,GLFW_STICKY_KEYS,true);
 
+    auto icosahedron = gen_isocahedron();
+
+    auto renderer = Renderer(icosahedron.vertexes,icosahedron.indexes);
     shader::init();
 
     //main loop
+    double timeCurrent=glfwGetTime();
+    double timeOld;
     while(!glfwWindowShouldClose(root)){
 
+        //dt 
+        timeOld=timeCurrent;
+        timeCurrent=glfwGetTime();
+        float dt=timeCurrent-timeOld;
+        //camera transform update
+        glm::mat4 cameraMat;
+        if(cameraRotationAxis!=glm::vec3(0)) cameraRotation = glm::rotate(glm::mat4(1), glm::radians(90*dt),cameraRotationAxis)*cameraRotation;
+        cameraTranslation = glm::translate(cameraTranslation,cameraTranslateDirection * 1.f * dt);
 
+        glProgramUniformMatrix4fv(shader::shader_program,shader::u_transform,1,false,glm::value_ptr(cameraProjection*cameraTranslation*cameraRotation));
+
+        glClearColor(0.f,0.f,0.f,0.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDrawElements(GL_TRIANGLES,icosahedron.indexes.size(),GL_UNSIGNED_INT,0);
         glfwSwapBuffers(root);
         glfwPollEvents();
     }

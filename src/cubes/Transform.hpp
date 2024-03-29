@@ -79,6 +79,7 @@ glm::mat4 Transform::projectRotate=glm::mat4(1.0f);
 glm::mat4 Transform::projectTranslate=glm::mat4(1.0f);
 glm::mat4 Transform::cameraMat=projectTranslate*projectRotate*projectMat;
 
+
 int Transform::calcDirVec(direction flags, glm::vec3 &retVec){
     glm::vec3 unitVec(0.0f);
     if (flags&UP){

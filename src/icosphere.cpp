@@ -4,15 +4,18 @@
 #include <iostream>
 #include <tuple>
 
+#include "icosphere.hpp"
 #include "glm/vec3.hpp"
 
+IndexedVertexes triangle_subdivide(IndexedVertexes const& data){
 
+    return data;
+}
 
-const float half_golden = (1 + sqrtf(5)) / 4;
-
-std::tuple<std::vector<glm::vec3>,std::vector<unsigned int>> isocahedron(glm::vec3 origin={0,0,0}, float scale = 1){
+IndexedVertexes gen_isocahedron(glm::vec3 origin, float scale){
 
     /*
+    TODO VERTEX WINDING IS NOT CHECKED
     https://mathworld.wolfram.com/RegularIcosahedron.html :
     - construction for an icosahedron with side length a=sqrt(50-10sqrt(5))/5 
     - place two end vertices at (0,+/-1,0) 
@@ -45,41 +48,28 @@ std::tuple<std::vector<glm::vec3>,std::vector<unsigned int>> isocahedron(glm::ve
 
 
     //create EBO
-    std::vector<unsigned int> indicies; indicies.reserve(12);
+    std::vector<unsigned int> indexes; indexes.reserve(60);
     
     //top row
-    for(int i=2; i<6;++i){
-        indicies.push_back(0);indicies.push_back(i-1);indicies.push_back(6);
+    for(unsigned int i=2; i<6;++i){
+        indexes.insert(indexes.end(),{0u,i-1,i});
     }
     //wraparound case
-    indicies.push_back(0);indicies.push_back(5);indicies.push_back(1);
-
-    //triangles in middle row pointing up and down: rows of verticies on top and bottom row
-    //each vertex except last (n-1) i on the top row links to two on bottom row at i2,i2+1;
-    //bottom row: every vertex except first (1) i2 links to two ontop at i-1,i
-    //1-5, 7-11
-
-    //triangles from top row vertex to two bottom row verticies
-    for(int i=1;i<6;++i){
-        //bottom row matching indexes are offset by 5
-        indicies.push_back(i);indicies.push_back(i+5);indicies.push_back(i+6);
-    }
-    //no wraparound case
-
-    //triangles from bottom row vertex
-    for(int i=7;i<11;++i){
-        //top row matching indexes are offset by -5
-        indicies.push_back(i);indicies.push_back(i-6);indicies.push_back(i-5);
-    }
-    //wraparound case
-    indicies.push_back(6);indicies.push_back(5);indicies.push_back(1);
-
+    indexes.insert(indexes.end(),{0,5,1});
 
     //bottom row
-    for(int i=8;i<12;++i){
-        indicies.push_back(6);indicies.push_back(i-1);indicies.push_back(i);
+    for(unsigned int i=8;i<12;++i){
+        indexes.insert(indexes.end(),{6,i-1,i});
     }
-    indicies.push_back(6);indicies.push_back(11);indicies.push_back(7);
+    indexes.push_back(6);indexes.push_back(11);indexes.push_back(7);
+    //middle triangle strip consists of rhombuses which are two triangles
+    auto rhombusTriangles = [&indexes](unsigned int tl,unsigned int tr,unsigned int bl,unsigned int br) mutable {
+        std::cout<<indexes.size()<<std::endl;
+        indexes.insert(indexes.end(),{tl,tr,bl,bl,tr,br});
+    };
+    for(unsigned int i=1; i<5;++i) rhombusTriangles(i,i+1,i+6,i+7);
+    rhombusTriangles(5,1,11,7); //edge case
 
-    return {points,indicies};
+
+    return {points,indexes};
 }
