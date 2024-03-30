@@ -3,11 +3,58 @@
 #include <vector>
 #include <iostream>
 #include <tuple>
+#include <array>
+#include <iterator>
 
 #include "icosphere.hpp"
 #include "glm/vec3.hpp"
 
-IndexedVertexes triangle_subdivide(IndexedVertexes const& data){
+//TODO consistent winding for backface culling
+//some functions will generate windings the wrong direction if arguements are passed in wrong order
+//these are position dependent
+//consider rendering with gl_triangle_strip aswell
+
+
+std::array<unsigned int,6> rhombusTriangles(unsigned int tl,unsigned int tr,unsigned int bl,unsigned int br){
+    return {tl,tr,bl,bl,tr,br};
+
+};
+
+template<typename iterator>
+std::vector<unsigned int> triangle_strip(iterator row1First, iterator row1Last, iterator row2First,iterator row2Last){
+    static_assert(std::is_same<typename std::iterator_traits<iterator>::value_type,unsigned int>);
+    //interleaves row indexes n*(row1,row2)
+    //swapping top row for bottom will reverse the winding order 
+    size_t rowLen = row1Last-row1First, row2Len = row2Last-row2First;
+    if(rowLen!=row2Len) throw std::runtime_error("Cant compute triangle strip as top & bottom rows not the same length.");
+    std::vector<unsigned int> indexes;indexes.reserve(rowLen);
+
+    ++row1First;
+    ++row2First;
+    while(row1First!=row1Last){
+        indexes.insert(indexes.end(),rhombusTriangles(row1First-1,row1First,row2First-1,row2First));
+        ++row1First; ++row2First;
+    }
+
+    return indexes;
+
+}
+
+void triangle_subdivide(std::array<glm::vec3,3> vertexes,float d){
+    //calculate vector step for each edge
+
+    auto step1 = (vertexes[1]-vertexes[0]) / d, step2 = (vertexes[2]-vertexes[0]) / d;
+
+}
+
+void deduplicate_verticies(IndexedVertexes data);
+
+IndexedVertexes triangles_subdivide(IndexedVertexes const& data,unsigned int division_root){
+    //see https://en.wikipedia.org/wiki/Geodesic_polyhedron#Examples
+    //will divide each equilateral triangle into division_root^2 triangles
+    //possible room for improvement as we are repeating edge subdivision verticies -with probably a hashmap of all verticies at the end,
+    //you can have a triangle anywhere in the index list that uses the same edge, so better to duplicate then remove later
+    //also at this point you're better off using blender
 
     return data;
 }
@@ -63,12 +110,13 @@ IndexedVertexes gen_isocahedron(glm::vec3 origin, float scale){
     }
     indexes.push_back(6);indexes.push_back(11);indexes.push_back(7);
     //middle triangle strip consists of rhombuses which are two triangles
-    auto rhombusTriangles = [&indexes](unsigned int tl,unsigned int tr,unsigned int bl,unsigned int br) mutable {
-        std::cout<<indexes.size()<<std::endl;
-        indexes.insert(indexes.end(),{tl,tr,bl,bl,tr,br});
-    };
-    for(unsigned int i=1; i<5;++i) rhombusTriangles(i,i+1,i+6,i+7);
-    rhombusTriangles(5,1,11,7); //edge case
+
+    for(unsigned int i=1; i<5;++i){
+        auto rt = rhombusTriangles(i,i+1,i+6,i+7);
+        indexes.insert(indexes.end(),rt.begin(),rt.end());
+    }
+    auto rt = rhombusTriangles(5,1,11,7);
+    indexes.insert(indexes.end(),rt.begin(),rt.end()); //edge case
 
 
     return {points,indexes};

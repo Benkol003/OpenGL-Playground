@@ -1,7 +1,6 @@
 .vs/
 .vscode/
 misc/
-include/
 build/*
 !build/shader.vs
 !build/shader.fs
