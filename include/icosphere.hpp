@@ -13,6 +13,8 @@ struct IndexedVertexes{
     std::vector<unsigned int> indexes;
 };
 
-IndexedVertexes triangle_subdivide(IndexedVertexes data);
+IndexedVertexes triangleSubdivide(IndexedVertexes data);
 
-IndexedVertexes gen_isocahedron(glm::vec3 origin={0,0,0}, float scale= 1);
+IndexedVertexes genIsocahedron(glm::vec3 origin={0,0,0}, float scale=1);
+
+IndexedVertexes genSphere(glm::vec3 origin={0,0,0},float scale=1);

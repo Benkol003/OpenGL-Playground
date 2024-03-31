@@ -53,7 +53,7 @@ try{
     //glfwSetFramebufferSizeCallback(root, resize_callback);
     //glfwSetInputMode(root,GLFW_STICKY_KEYS,true);
 
-    auto icosahedron = gen_isocahedron();
+    auto icosahedron = genSphere();
 
     auto renderer = Renderer(icosahedron.vertexes,icosahedron.indexes);
     shader::init();

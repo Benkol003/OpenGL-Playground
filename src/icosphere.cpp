@@ -9,6 +9,7 @@
 
 #include "icosphere.hpp"
 #include "glm/vec3.hpp"
+#include "glm/geometric.hpp"
 
 //TODO consistent winding for backface culling
 //some functions will generate windings the wrong direction if arguements are passed in wrong order
@@ -24,19 +25,7 @@ std::array<unsigned int,6> rhombusEqTriangles(unsigned int tl,unsigned int tr,un
 
 }
 
-template<typename value_t> std::vector<value_t> range_n(value_t start, value_t end, size_t n){
-    //generate range of values from start to end inclusive of n values
-    value_t step = ( (end-start)/(n-1));
-    std::vector<value_t> ret; ret.reserve(n);
-    for(size_t i=0; i<n;++i){
-        ret.push_back(start);
-        start+=step;
-    }
-    return ret;
-}
-
-
-template<> std::vector<glm::vec3> range_n(glm::vec3 start,glm::vec3 end,size_t n){
+std::vector<glm::vec3> range_n(glm::vec3 start,glm::vec3 end,size_t n){
     float nf = static_cast<float>(n);
 
     glm::vec3 step = ( (end-start)/(nf-1));
@@ -58,8 +47,8 @@ std::vector<unsigned int> EqTriangleStrip(iter1 row1First, iter1 row1Last, iter2
     //topLeftmost - whether top/bottom row has leftmost/starting vertex
     //interleaves row indexes n*(row1,row2)
     //swapping top row for bottom will reverse the winding order 
-    size_t row1Len = row1Last-row1First, row2Len = row2Last-row2First;
-    size_t rowDiff = row1Len - row2Len;
+    std::ptrdiff_t row1Len = row1Last-row1First, row2Len = row2Last-row2First;
+    std::ptrdiff_t rowDiff = row1Len - row2Len;
     int rd; topLeftmost ? rd=1 : rd = -1; //allowed row length distance, dependent on starting row
     if(!(rowDiff == 0 || rowDiff == rd))throw std::invalid_argument("vertex row length mismatch");
 
@@ -74,10 +63,11 @@ std::vector<unsigned int> EqTriangleStrip(iter1 row1First, iter1 row1Last, iter2
 
     //iterators are now at end
     //edge cases for when odd no. of triangles
+    //one of the pointers wont be at end of row
     if(rowDiff==1){
-        indexes.insert(indexes.end(),{*--row1First,*--row1First,*--row1Last});
+        indexes.insert(indexes.end(),{*row1First,*--row1First,*--row1First});
     }else if(rowDiff==-1){
-        indexes.insert(indexes.end(),{*--row2First,*--row1First,*--row2First});
+        indexes.insert(indexes.end(),{*row2First,*--row1First,*--row2First});
     }
 
     return indexes;
@@ -98,10 +88,12 @@ IndexedVertexes EqTriangleSubdivide(std::array<glm::vec3,3> vertexes,unsigned in
     auto lsr = range_n(vertexes[0],vertexes[1],division_root+1), rsr = range_n(vertexes[0],vertexes[2],division_root+1);
 
     //TODO top triangle special case
-
+    retVertexes.push_back(vertexes[0]);
     std::vector<glm::vec3> rowPrev = {lsr[1],rsr[1]};
     retVertexes.insert(retVertexes.end(),{lsr[1],rsr[1]});
-    std::vector<unsigned int> rowIdxPrev{0,1}; retIndexes.insert(retIndexes.end(),{0,1});
+    //top triangle edge case
+    retIndexes.insert(retIndexes.end(),{0,1,2});
+    std::vector<unsigned int> rowIdxPrev{1,2};
     //form verticies for each row/ triangle strip
     for(int i=2;i<=division_root;++i){
         auto rowNext=range_n(lsr[i],rsr[i],i+1);
@@ -147,7 +139,7 @@ IndexedVertexes EqTrianglesSubdivide(IndexedVertexes const& data,unsigned int di
     return retData;
 }
 
-IndexedVertexes gen_isocahedron(glm::vec3 origin, float scale){
+IndexedVertexes genIsocahedron(glm::vec3 origin, float scale){
 
     /*
     TODO VERTEX WINDING IS NOT CHECKED
@@ -205,6 +197,13 @@ IndexedVertexes gen_isocahedron(glm::vec3 origin, float scale){
     auto rt = EqTriangleStrip(tri.begin(),tri.end(),bti.begin(),bti.end(),true);
     indexes.insert(indexes.end(),rt.begin(),rt.end());
 
-    auto data = EqTrianglesSubdivide({points,indexes},3);
+    auto data = EqTrianglesSubdivide({points,indexes},16);
+    for(auto &i: data.vertexes) i=glm::normalize(i);
+    return data;
+}
+
+IndexedVertexes genSphere(glm::vec3 origin,float scale){
+    auto data = genIsocahedron(origin,scale);
+    for(auto &i: data.vertexes) i=glm::normalize(i); //TODO parralel loops
     return data;
 }
