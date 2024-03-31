@@ -6,6 +6,10 @@
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 
+#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
+
 #define GLM_FORCE_MESSAGES
 #define GLM_FORCE_INTRINSICS //still need to check if intrinsics are being used
 //TODO add SSE/AVX to cmake
@@ -41,17 +45,23 @@ try{
     glfwMakeContextCurrent(root);
     glfwSetKeyCallback(root,keys_callback);
 
-    //initialise GLAD
+    //initialise GLAD/GL
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0){
         throw std::runtime_error("Failed to initialise GLAD");
     }
     printf("Loaded OpenGL %d.%d\n", GLAD_VERSION_MAJOR(version), GLAD_VERSION_MINOR(version));
 
-
     glViewport(0,0,WINDOW_SIZE[0], WINDOW_SIZE[1]);
     //glfwSetFramebufferSizeCallback(root, resize_callback);
     //glfwSetInputMode(root,GLFW_STICKY_KEYS,true);
+
+    //imgui init
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui_ImplGlfw_InitForOpenGL(root,true);
+    ImGui_ImplOpenGL3_Init();
 
     auto icosahedron = genSphere();
 
@@ -62,6 +72,12 @@ try{
     double timeCurrent=glfwGetTime();
     double timeOld;
     while(!glfwWindowShouldClose(root)){
+        glfwPollEvents();
+        // Start the Dear ImGui frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::ShowDemoWindow(); 
 
         //dt 
         timeOld=timeCurrent;
@@ -77,11 +93,15 @@ try{
         glClearColor(0.f,0.f,0.f,0.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDrawElements(GL_TRIANGLES,icosahedron.indexes.size(),GL_UNSIGNED_INT,0);
+
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(root);
-        glfwPollEvents();
     }
 
-
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     glfwTerminate();
     return 0;
 } catch(std::exception &e){

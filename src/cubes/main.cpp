@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "GLAD/gl.h"
+#include "glad/gl.h"
 #include "GLFW/glfw3.h"
 
 #include "shaders.hpp"

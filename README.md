@@ -3,6 +3,9 @@ Repository for learning and experimenting with OpenGL.
 
 ## Targets:
 
+### Main
+Displays a icosphere (Procedurally generated sphere from subdivision of isocahedron faces).
+
 ### Cubes
 Displays 10 different cubes that can be controlled. Use keys 0-9 to select a cube, or the ¬ key to select the camera. Use WASD for controlling rotation, and arrow keys for movement.
 

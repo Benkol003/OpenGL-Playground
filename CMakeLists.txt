@@ -26,17 +26,23 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/lib/glad/cmake glad_cmake)
 glad_add_library(glad_gl_core_33 STATIC API gl:core=3.3)
 
 ### GLM ###
+add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
 find_package(glm CONFIG REQUIRED)
 
-set(INCLUDES
+### imgui source ###
+set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/lib/imgui/)
+FILE(GLOB IMGUI_SOURCES ${IMGUI_DIR}/*.cpp IMGUI_SOURCES ${IMGUI_DIR}/*.h ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp)
+
+set(LIB_INCLUDES
 PUBLIC
+${IMGUI_DIR}
 ${CMAKE_SOURCE_DIR}/lib/stb/
 ${GLM_INCLUDE_DIR}
 )
 
-include_directories(${INCLUDES})
-
-
+include_directories(${LIB_INCLUDES})
+add_library(imgui STATIC ${IMGUI_SOURCES})
+target_link_libraries(imgui PRIVATE glfw)
 ### Target main ####
 
 set(SOURCES
@@ -46,11 +52,12 @@ ${CMAKE_SOURCE_DIR}/src/icosphere.cpp
 
 add_executable(main ${SOURCES})
 
-target_include_directories(main PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(main PRIVATE ${LIB_INCLUDES} ${CMAKE_SOURCE_DIR}/include)
 
 set(LIBS
 PRIVATE
 glfw
+imgui
 glad_gl_core_33
 OpenGL::GL
 glm::glm

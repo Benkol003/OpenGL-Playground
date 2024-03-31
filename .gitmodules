@@ -10,3 +10,6 @@
 [submodule "lib/stb"]
 	path = lib/stb
 	url = https://github.com/nothings/stb.git
+[submodule "imgui"]
+	path = t
+	url = https://github.com/ocornut/imgui.git

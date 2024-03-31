@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include "glm/vec3.hpp"
-#include "GLAD/gl.h"
+#include "glad/gl.h"
 
 class Renderer{
 

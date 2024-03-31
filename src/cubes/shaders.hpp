@@ -5,7 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 
-#include "GLAD/gl.h"
+#include "glad/gl.h"
 
 
 namespace shaders {

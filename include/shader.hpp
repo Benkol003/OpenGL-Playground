@@ -3,7 +3,7 @@
 #include <string>
 #include <stdexcept>
 
-#include "GLAD/gl.h"
+#include "glad/gl.h"
 
 std::string read_file(const char* path){
     auto fp = std::fopen(path,"rb");
