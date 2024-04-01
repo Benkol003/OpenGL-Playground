@@ -6,18 +6,19 @@
 #include <array>
 #include <iterator>
 #include <stdexcept>
+#include <algorithm>
+#include <execution>
+#include <unordered_map>
+#include <functional>
 
 #include "icosphere.hpp"
 #include "glm/vec3.hpp"
 #include "glm/geometric.hpp"
 
-//TODO consistent winding for backface culling
-//some functions will generate windings the wrong direction if arguements are passed in wrong order
-//these are position dependent
-//consider rendering with gl_triangle_strip aswell
-
-
-//we can remove some parameters if we dont want them to be equilateral triangles - triangles will all still be same size/area though.
+/*
+TODO:
+- check reserves are correct (use new mallocd std::array?)
+*/
 
 std::array<unsigned int,6> rhombusEqTriangles(unsigned int tl,unsigned int tr,unsigned int bl,unsigned int br, bool topLeftmost){
     if(topLeftmost) return {tl,bl,tr, tr,bl,br};
@@ -40,7 +41,7 @@ std::vector<glm::vec3> range_n(glm::vec3 start,glm::vec3 end,size_t n){
 
 template<typename iter1,typename iter2>
 std::vector<unsigned int> EqTriangleStrip(iter1 row1First, iter1 row1Last, iter2 row2First,iter2 row2Last, bool topLeftmost){
-    //takes iterabbles over top and bottom row indexes
+    //takes iterables over top and bottom row indexes
     static_assert(std::is_same<typename std::iterator_traits<iter1>::value_type,unsigned int>::value);
     static_assert(std::is_same<typename std::iterator_traits<iter2>::value_type,unsigned int>::value);
 
@@ -49,7 +50,7 @@ std::vector<unsigned int> EqTriangleStrip(iter1 row1First, iter1 row1Last, iter2
     //swapping top row for bottom will reverse the winding order 
     std::ptrdiff_t row1Len = row1Last-row1First, row2Len = row2Last-row2First;
     std::ptrdiff_t rowDiff = row1Len - row2Len;
-    int rd; topLeftmost ? rd=1 : rd = -1; //allowed row length distance, dependent on starting row
+    int rd; topLeftmost ? rd=1 : rd = -1; //allowed row length, dependent on starting row
     if(!(rowDiff == 0 || rowDiff == rd))throw std::invalid_argument("vertex row length mismatch");
 
     size_t triangles = ((row1Len-1)*2) + rowDiff;
@@ -80,7 +81,8 @@ IndexedVertexes EqTriangleSubdivide(std::array<glm::vec3,3> vertexes,unsigned in
     std::vector<glm::vec3> retVertexes;
     std::vector<unsigned int> retIndexes;
 
-    //verticies.reserve();
+    retVertexes.reserve((division_root+1)*(division_root*2)/2);
+    retIndexes.reserve(pow(division_root,2)*3);
     
     float d = static_cast<float>(division_root);
     
@@ -113,7 +115,7 @@ IndexedVertexes EqTriangleSubdivide(std::array<glm::vec3,3> vertexes,unsigned in
     
 }
 
-void DeduplicateVerticies(IndexedVertexes data);
+
 
 IndexedVertexes EqTrianglesSubdivide(IndexedVertexes const& data,unsigned int division_root){
     //see https://en.wikipedia.org/wiki/Geodesic_polyhedron#Examples
@@ -122,8 +124,12 @@ IndexedVertexes EqTrianglesSubdivide(IndexedVertexes const& data,unsigned int di
     //you can have a triangle anywhere in the index list that uses the same edge, so better to duplicate then remove later
     //also at this point you're better off using blender
     
+    size_t triangles = data.indexes.size() / 3;
     IndexedVertexes retData;
-    //retData.vertexes.reserve(?);
+    //will subdivide every existing triangle - use sizing rules from eqTriangleSubdivide
+    //we dont yet attempt to merge duplicated verticies
+    retData.vertexes.reserve((division_root+1)*(division_root*2)/2 * triangles);
+    retData.indexes.reserve(pow(division_root,2)*3 * triangles);
 
     for(auto i=data.indexes.begin();i<data.indexes.end();){
         auto d = EqTriangleSubdivide({data.vertexes[*i],data.vertexes[*(++i)],data.vertexes[*(++i)]},division_root);
@@ -142,7 +148,6 @@ IndexedVertexes EqTrianglesSubdivide(IndexedVertexes const& data,unsigned int di
 IndexedVertexes genIsocahedron(glm::vec3 origin, float scale){
 
     /*
-    TODO VERTEX WINDING IS NOT CHECKED
     https://mathworld.wolfram.com/RegularIcosahedron.html :
     - construction for an icosahedron with side length a=sqrt(50-10sqrt(5))/5 
     - place two end vertices at (0,+/-1,0) 
@@ -186,13 +191,11 @@ IndexedVertexes genIsocahedron(glm::vec3 origin, float scale){
 
     //bottom row
     for(unsigned int i=8;i<12;++i){
-        indexes.insert(indexes.end(),{6,i-1,i});
+        indexes.insert(indexes.end(),{6,i,i-1});
     }
-    indexes.push_back(6);indexes.push_back(11);indexes.push_back(7);
+    indexes.push_back(6);indexes.push_back(7);indexes.push_back(11);
 
     //middle triangle strip consists of rhombuses which are two triangles
-    //1-4,5,1
-    //7,10,11,7
     std::array<unsigned int,6> tri{1,2,3,4,5,1}, bti{7,8,9,10,11,7}; //top/bottom row indexes
     auto rt = EqTriangleStrip(tri.begin(),tri.end(),bti.begin(),bti.end(),true);
     indexes.insert(indexes.end(),rt.begin(),rt.end());
@@ -202,6 +205,14 @@ IndexedVertexes genIsocahedron(glm::vec3 origin, float scale){
 IndexedVertexes genSphere(unsigned int division_power,glm::vec3 origin,float scale){
     auto data = genIsocahedron(origin,scale);
     data = EqTrianglesSubdivide(data,division_power);
-    for(auto &i: data.vertexes) i=glm::normalize(i);//move vertex points to sphere surface //TODO parralel loops
+    for(auto &i: data.vertexes) i=glm::normalize(i);//move vertex points to sphere surface
     return data;
 }
+
+/*
+IndexedVertexes deduplicateVertexes(IndexedVertexes data){
+std::unordered_map<glm::vec3, unsigned int, std::hash<glm::vec3>, decltype(glm::equal<3, float, glm::packed_highp>)> 
+    dedupeVertexes(10, std::hash<glm::vec3>(), glm::equal<3, float, glm::packed_highp>);
+}
+
+*/

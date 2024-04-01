@@ -59,6 +59,7 @@ try{
     //imgui init
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     ImGui_ImplGlfw_InitForOpenGL(root,true);
     ImGui_ImplOpenGL3_Init();
 
@@ -90,6 +91,7 @@ try{
             wireframe ? glPolygonMode(GL_FRONT_AND_BACK,GL_LINE) : glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
         }
         ImGui::End();
+
         //dt 
         timeOld=timeCurrent;
         timeCurrent=glfwGetTime();

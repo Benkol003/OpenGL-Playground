@@ -6,12 +6,12 @@
 
 #include "glm/vec3.hpp"
 
-extern const float golden_ratio;
-
 struct IndexedVertexes{
     std::vector<glm::vec3> vertexes;
     std::vector<unsigned int> indexes;
 };
+
+void DeduplicateVertexes(IndexedVertexes data);
 
 IndexedVertexes triangleSubdivide(IndexedVertexes data);
 

@@ -24,7 +24,7 @@ class Renderer{
 
         glPolygonMode(GL_FRONT_AND_BACK,GL_LINE); //wireframe mode
         glEnable(GL_DEPTH_TEST);
-        //glEnable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
     }
 
     void updateData(std::vector<glm::vec3> data,std::vector<unsigned int> indicies){
