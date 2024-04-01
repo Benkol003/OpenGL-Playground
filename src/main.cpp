@@ -59,26 +59,37 @@ try{
     //imgui init
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
     ImGui_ImplGlfw_InitForOpenGL(root,true);
     ImGui_ImplOpenGL3_Init();
 
-    auto icosahedron = genSphere();
+    int divisionFactor=1;
+    auto data = genSphere(divisionFactor);
 
-    auto renderer = Renderer(icosahedron.vertexes,icosahedron.indexes);
+    auto renderer = Renderer(data.vertexes,data.indexes);
     shader::init();
 
     //main loop
     double timeCurrent=glfwGetTime();
     double timeOld;
+
+    bool wireframe=true;
+
     while(!glfwWindowShouldClose(root)){
         glfwPollEvents();
-        // Start the Dear ImGui frame
+        //build immediate mode ui
+        //TODO window doesnt automatically resize to fit widgets
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::ShowDemoWindow(); 
-
+        ImGui::Begin("controls",NULL,ImGuiWindowFlags_AlwaysAutoResize);
+        if(ImGui::SliderInt("triangle\ndivision\nfactor",&divisionFactor,1,64)){
+            data = genSphere(divisionFactor);
+            renderer.updateData(data.vertexes,data.indexes);
+        }
+        if(ImGui::Selectable("wireframe mode",&wireframe)){
+            wireframe ? glPolygonMode(GL_FRONT_AND_BACK,GL_LINE) : glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+        }
+        ImGui::End();
         //dt 
         timeOld=timeCurrent;
         timeCurrent=glfwGetTime();
@@ -92,7 +103,7 @@ try{
 
         glClearColor(0.f,0.f,0.f,0.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDrawElements(GL_TRIANGLES,icosahedron.indexes.size(),GL_UNSIGNED_INT,0);
+        glDrawElements(GL_TRIANGLES,data.indexes.size(),GL_UNSIGNED_INT,0);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

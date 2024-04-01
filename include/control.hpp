@@ -7,7 +7,9 @@
 //TODO atm we're using this as the model transform for testing
 glm::vec3 cameraRotationAxis(0), cameraTranslateDirection(0); //vectors for camera transforms. dont store normalised - other key release wont work
 
-glm::mat4 cameraRotation(1), cameraTranslation(1), cameraProjection = glm::perspective(glm::radians(80.0f),1.0f,0.1f,100.0f);
+glm::mat4 cameraTranslationReset = glm::translate(glm::mat4(1),glm::vec3(0,0,-2));
+
+glm::mat4 cameraRotation(1), cameraTranslation=cameraTranslationReset, cameraProjection = glm::perspective(glm::radians(80.0f),1.0f,0.1f,100.0f);
 
 std::unordered_map<unsigned int,std::any> keypress_binds;
 
@@ -27,7 +29,7 @@ void keys_callback(GLFWwindow* window,int key,int scancode,int action, int mods)
 
             case GLFW_KEY_ENTER:
             cameraRotation=glm::mat4(1);
-            cameraTranslation = glm::mat4(1);
+            cameraTranslation = cameraTranslationReset;
             return;
             break;
         }

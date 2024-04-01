@@ -17,4 +17,4 @@ IndexedVertexes triangleSubdivide(IndexedVertexes data);
 
 IndexedVertexes genIsocahedron(glm::vec3 origin={0,0,0}, float scale=1);
 
-IndexedVertexes genSphere(glm::vec3 origin={0,0,0},float scale=1);
+IndexedVertexes genSphere(unsigned int division_power=1, glm::vec3 origin={0,0,0},float scale=1);

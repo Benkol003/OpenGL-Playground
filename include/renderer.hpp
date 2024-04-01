@@ -27,6 +27,11 @@ class Renderer{
         //glEnable(GL_CULL_FACE);
     }
 
+    void updateData(std::vector<glm::vec3> data,std::vector<unsigned int> indicies){
+        glBufferData(GL_ARRAY_BUFFER,sizeof(glm::vec3)*data.size(),data.data(),GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(unsigned int)*indicies.size(),indicies.data(),GL_STATIC_DRAW);
+    }
+
     ~Renderer(){
         glDeleteBuffers(1,&VBO);
         glDeleteVertexArrays(1,&VAO);

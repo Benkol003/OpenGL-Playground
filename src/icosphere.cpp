@@ -196,14 +196,12 @@ IndexedVertexes genIsocahedron(glm::vec3 origin, float scale){
     std::array<unsigned int,6> tri{1,2,3,4,5,1}, bti{7,8,9,10,11,7}; //top/bottom row indexes
     auto rt = EqTriangleStrip(tri.begin(),tri.end(),bti.begin(),bti.end(),true);
     indexes.insert(indexes.end(),rt.begin(),rt.end());
-
-    auto data = EqTrianglesSubdivide({points,indexes},16);
-    for(auto &i: data.vertexes) i=glm::normalize(i);
-    return data;
+    return {points,indexes};
 }
 
-IndexedVertexes genSphere(glm::vec3 origin,float scale){
+IndexedVertexes genSphere(unsigned int division_power,glm::vec3 origin,float scale){
     auto data = genIsocahedron(origin,scale);
-    for(auto &i: data.vertexes) i=glm::normalize(i); //TODO parralel loops
+    data = EqTrianglesSubdivide(data,division_power);
+    for(auto &i: data.vertexes) i=glm::normalize(i);//move vertex points to sphere surface //TODO parralel loops
     return data;
 }
