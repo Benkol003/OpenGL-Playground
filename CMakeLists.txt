@@ -12,6 +12,13 @@ set(CMAKE_PREFIX_PATH ${CMAKE_SOURCE_DIR}/lib/)
 
 find_package(OpenGL REQUIRED)
 
+### enable intrinsics ###
+if(MSVC)
+    add_compile_options(/arch:SSE2 /arch:AVX2)
+else()
+    add_compile_options(-msse2 -mavx2)
+endif()
+
 ### GLFW ###
 #disable unneccesary GLFW CMake stuff
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
@@ -47,7 +54,7 @@ target_link_libraries(imgui PRIVATE glfw)
 
 set(SOURCES
 ${CMAKE_SOURCE_DIR}/src/main.cpp
-${CMAKE_SOURCE_DIR}/src/icosphere.cpp
+${CMAKE_SOURCE_DIR}/src/procedural_meshes.cpp
 )
 
 add_executable(main ${SOURCES})

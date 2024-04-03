@@ -11,13 +11,43 @@
 #include <unordered_map>
 #include <functional>
 
-#include "icosphere.hpp"
+#include "procedural_meshes.hpp"
 #include "glm/vec3.hpp"
 #include "glm/geometric.hpp"
 
 /*
+FUNCTION COMPLIANCE RULES:
+- must be centered around the origin
+- must have consistent winding of anticlockwise for front-facing vertexes
+- all generated meshes must fit within axii range [-1,1] i.e. 2x2x2 box. Ideally at least two vertexes covering that range in one axis.
+- specify size ratios rather than actual size arguements due to the above rule.
+
 TODO:
-- check reserves are correct (use new mallocd std::array?)
+- test reserves are correct (use new mallocd std::array?)
+- test all meshes fit in range [-1,1] in each axis
+*/
+/*
+struct glmVec3KeyTraits {
+    //TODO revise properly
+    size_t operator()(glm::vec3 const& v)const{
+        return std::hash<float>()(v.x) ^ std::hash<float>()(v.y) ^ std::hash<float>()(v.z);
+    }
+
+    bool operator()(glm::vec3 const& v, glm::vec3 const& w)const{
+        return v == w;
+    }
+};
+
+
+void deduplicateVertexes(IndexedVertexes &data){
+    //TODO:
+    //unordered_map is slow
+    //throws exception
+    std::cout<<"old size - v: "<<data.vertexes.size()<<" i: "<<data.indexes.size()<<std::endl;
+    std::unordered_map<glm::vec3,unsigned int,glmVec3KeyTraits,glmVec3KeyTraits> uniqueVertexes;
+    for(unsigned int i=0;i<data.vertexes.size();++i) uniqueVertexes.insert({data.vertexes[i],i});
+    for(auto &i: data.indexes) i = uniqueVertexes.at(data.vertexes[i]);
+    std::cout<<"new size - v: "<<data.vertexes.size()<<" i: "<<data.indexes.size()<<std::endl;
 */
 
 std::array<unsigned int,6> rhombusEqTriangles(unsigned int tl,unsigned int tr,unsigned int bl,unsigned int br, bool topLeftmost){
@@ -168,7 +198,8 @@ IndexedVertexes genIsocahedron(glm::vec3 origin, float scale){
 
     const float angle_i = 2* M_PI / 5.;
     
-    for(float angle = -M_PI;angle < M_PI;angle+=angle_i) points.emplace_back(sinf(angle),height,cosf(angle));
+    float angle = -M_PI;
+    for(int i=0;i<5;++i, angle+=angle_i) points.emplace_back(sinf(angle),height,cosf(angle));
 
     //bottom vertex
     points.emplace_back(0,-1,0);
@@ -209,10 +240,64 @@ IndexedVertexes genSphere(unsigned int division_power,glm::vec3 origin,float sca
     return data;
 }
 
-/*
-IndexedVertexes deduplicateVertexes(IndexedVertexes data){
-std::unordered_map<glm::vec3, unsigned int, std::hash<glm::vec3>, decltype(glm::equal<3, float, glm::packed_highp>)> 
-    dedupeVertexes(10, std::hash<glm::vec3>(), glm::equal<3, float, glm::packed_highp>);
-}
+IndexedVertexes genRegularPrism(unsigned int circumference_divisions,float heightRadiusRatio){ //default hieght goes -1 to +1
+    /*
+    //use this to generate a cyinder
+    //is vertical by default
+    
+    sizing rules:
+    if height ratio <= 2:
+        prism base lies on a circle of radius 1
+    if height ratio >2:
+        hieght = 2, prism base lies on a circle of radius 1/height ratio.
 
-*/
+    TODO:
+    allow tapering to end points i.e. cone
+    removing the caps requires double-sided faces
+
+    */
+
+    if(circumference_divisions<3) throw std::invalid_argument("regular polygon prism base must have at least 3 sides"); 
+    unsigned int cdiv2 = circumference_divisions * 2;
+
+    float radius;
+    if (heightRadiusRatio>2){
+        radius = 2 / heightRadiusRatio;
+        heightRadiusRatio = 2; //radius is now a ratio, and fix height to 2
+    } else radius = 1;
+
+    IndexedVertexes data;
+    data.vertexes.reserve((cdiv2)+2);
+    data.indexes.reserve(cdiv2);
+
+
+    //points on circle to construct caps and walls 
+    float step = 2* M_PI / circumference_divisions;
+    float angle_i = 0;
+    for(int i = 0;i<circumference_divisions;++i){
+        data.vertexes.push_back({cosf(angle_i)*radius,heightRadiusRatio/2,-sinf(angle_i)*radius}); //negative z-axis goes into screen. -sin for anticlockwise
+        data.vertexes.push_back({cosf(angle_i)*radius,-heightRadiusRatio/2,-sinf(angle_i)*radius});
+        angle_i+=step;
+    }
+
+    //generate top and bottom center points TODO make optional to have caps
+        data.vertexes.push_back({0,heightRadiusRatio/2,0});
+        data.vertexes.push_back({0,-heightRadiusRatio/2,0});
+    //form triangles with indexes
+
+    //sides
+    for(unsigned int i=3; i<cdiv2;i+=2) data.indexes.insert(data.indexes.end(),{i-3,i-2,i-1, i-1,i-2,i});
+    //wraparound case
+    data.indexes.insert(data.indexes.end(),{cdiv2-2,cdiv2-1,0,     cdiv2-1,1,0});
+
+    //caps
+        unsigned int tv = cdiv2, bv = tv+1;
+        for(unsigned int i=3; i<cdiv2;i+=2){
+            //triangle for top and bottom cap circle segement
+            data.indexes.insert(data.indexes.end(),{tv,i-3,i-1, bv,i,i-2});
+        }
+        //wraparound case
+        data.indexes.insert(data.indexes.end(),{tv,cdiv2-2,0,   bv,1,cdiv2-1});
+
+    return data;
+}

@@ -18,7 +18,7 @@
 #include <glm/gtx/rotate_normalized_axis.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "icosphere.hpp"
+#include "procedural_meshes.hpp"
 #include "shader.hpp"
 #include "renderer.hpp"
 #include "control.hpp"
@@ -43,6 +43,7 @@ try{
     if(!root) throw std::runtime_error("Failed to initialise GLFW window");
 
     glfwMakeContextCurrent(root);
+    glfwSwapInterval(0); //disable vsync
     glfwSetKeyCallback(root,keys_callback);
 
     //initialise GLAD/GL
@@ -63,8 +64,9 @@ try{
     ImGui_ImplGlfw_InitForOpenGL(root,true);
     ImGui_ImplOpenGL3_Init();
 
-    int divisionFactor=1;
-    auto data = genSphere(divisionFactor);
+    int divisionFactor=3;
+    float heightRatio = 1;
+    auto data = genRegularPrism(divisionFactor,heightRatio);
 
     auto renderer = Renderer(data.vertexes,data.indexes);
     shader::init();
@@ -83,8 +85,8 @@ try{
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ImGui::Begin("controls",NULL,ImGuiWindowFlags_AlwaysAutoResize);
-        if(ImGui::SliderInt("triangle\ndivision\nfactor",&divisionFactor,1,64)){
-            data = genSphere(divisionFactor);
+        if(ImGui::SliderInt("triangle\ndivision\nfactor",&divisionFactor,3,64) || ImGui::SliderFloat("Height Ratio",&heightRatio,0.1,100)){
+            data = genRegularPrism(divisionFactor,heightRatio);
             renderer.updateData(data.vertexes,data.indexes);
         }
         if(ImGui::Selectable("wireframe mode",&wireframe)){
@@ -118,7 +120,7 @@ try{
     glfwTerminate();
     return 0;
 } catch(std::exception &e){
-    std::cerr<<e.what();
+    std::cerr<<"Exception: "<<e.what();
     glfwTerminate();
 }
 }
