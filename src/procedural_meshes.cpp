@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <functional>
 
+#include "util.hpp"
 #include "procedural_meshes.hpp"
 #include "glm/vec3.hpp"
 #include "glm/geometric.hpp"
@@ -70,7 +71,7 @@ std::vector<glm::vec3> range_n(glm::vec3 start,glm::vec3 end,size_t n){
 
 
 template<typename iter1,typename iter2>
-std::vector<unsigned int> EqTriangleStrip(iter1 row1First, iter1 row1Last, iter2 row2First,iter2 row2Last, bool topLeftmost){
+std::vector<unsigned int> eqTriangleStrip(iter1 row1First, iter1 row1Last, iter2 row2First,iter2 row2Last, bool topLeftmost){
     //takes iterables over top and bottom row indexes
     static_assert(std::is_same<typename std::iterator_traits<iter1>::value_type,unsigned int>::value);
     static_assert(std::is_same<typename std::iterator_traits<iter2>::value_type,unsigned int>::value);
@@ -106,7 +107,7 @@ std::vector<unsigned int> EqTriangleStrip(iter1 row1First, iter1 row1Last, iter2
 }
 
 
-IndexedVertexes EqTriangleSubdivide(std::array<glm::vec3,3> vertexes,unsigned int division_root){
+IndexedVertexes eqTriangleSubdivide(std::array<glm::vec3,3> vertexes,unsigned int division_root){
     //calculate vector step for each edge
     std::vector<glm::vec3> retVertexes;
     std::vector<unsigned int> retIndexes;
@@ -136,7 +137,7 @@ IndexedVertexes EqTriangleSubdivide(std::array<glm::vec3,3> vertexes,unsigned in
         
 
         
-        auto ri = EqTriangleStrip(rowIdxPrev.begin(),rowIdxPrev.end(),rowIdxNext.begin(),rowIdxNext.end(),false);
+        auto ri = eqTriangleStrip(rowIdxPrev.begin(),rowIdxPrev.end(),rowIdxNext.begin(),rowIdxNext.end(),false);
         retIndexes.insert(retIndexes.end(),ri.begin(),ri.end());
         rowIdxPrev=rowIdxNext;
     }
@@ -147,7 +148,7 @@ IndexedVertexes EqTriangleSubdivide(std::array<glm::vec3,3> vertexes,unsigned in
 
 
 
-IndexedVertexes EqTrianglesSubdivide(IndexedVertexes const& data,unsigned int division_root){
+IndexedVertexes eqTrianglesSubdivide(IndexedVertexes const& data,unsigned int division_root){
     //see https://en.wikipedia.org/wiki/Geodesic_polyhedron#Examples
     //will divide each equilateral triangle in the provided mesh into division_root^2 eq triangles
     //possible room for improvement as we are repeating edge subdivision verticies -with probably a hashmap of all verticies at the end,
@@ -162,7 +163,7 @@ IndexedVertexes EqTrianglesSubdivide(IndexedVertexes const& data,unsigned int di
     retData.indexes.reserve(pow(division_root,2)*3 * triangles);
 
     for(auto i=data.indexes.begin();i<data.indexes.end();){
-        auto d = EqTriangleSubdivide({data.vertexes[*i],data.vertexes[*(++i)],data.vertexes[*(++i)]},division_root);
+        auto d = eqTriangleSubdivide({data.vertexes[*i],data.vertexes[*(++i)],data.vertexes[*(++i)]},division_root);
 
         //provided indexes start with the new vertexes - need to offset as inserting infront of existing vertexes
         auto offset=retData.vertexes.size();
@@ -175,7 +176,7 @@ IndexedVertexes EqTrianglesSubdivide(IndexedVertexes const& data,unsigned int di
     return retData;
 }
 
-IndexedVertexes genIsocahedron(glm::vec3 origin, float scale){
+IndexedVertexes isocahedron(glm::vec3 origin, float scale){
 
     /*
     https://mathworld.wolfram.com/RegularIcosahedron.html :
@@ -228,21 +229,21 @@ IndexedVertexes genIsocahedron(glm::vec3 origin, float scale){
 
     //middle triangle strip consists of rhombuses which are two triangles
     std::array<unsigned int,6> tri{1,2,3,4,5,1}, bti{7,8,9,10,11,7}; //top/bottom row indexes
-    auto rt = EqTriangleStrip(tri.begin(),tri.end(),bti.begin(),bti.end(),true);
+    auto rt = eqTriangleStrip(tri.begin(),tri.end(),bti.begin(),bti.end(),true);
     indexes.insert(indexes.end(),rt.begin(),rt.end());
     return {points,indexes};
 }
 
-IndexedVertexes genSphere(unsigned int division_power,glm::vec3 origin,float scale){
-    auto data = genIsocahedron(origin,scale);
-    data = EqTrianglesSubdivide(data,division_power);
+IndexedVertexes sphere(unsigned int division_power,glm::vec3 origin,float scale){
+    auto data = isocahedron(origin,scale);
+    data = eqTrianglesSubdivide(data,division_power);
     for(auto &i: data.vertexes) i=glm::normalize(i);//move vertex points to sphere surface
     return data;
 }
 
-IndexedVertexes genRegularPrism(unsigned int circumference_divisions,float heightRadiusRatio){ //default hieght goes -1 to +1
+IndexedVertexes regularPrism(unsigned int circumference_divisions,float heightRadiusRatio){ //default hieght goes -1 to +1
     /*
-    //use this to generate a cyinder
+    //use this to generate a cylinder
     //is vertical by default
     
     sizing rules:
@@ -300,4 +301,15 @@ IndexedVertexes genRegularPrism(unsigned int circumference_divisions,float heigh
         data.indexes.insert(data.indexes.end(),{tv,cdiv2-2,0,   bv,1,cdiv2-1});
 
     return data;
+}
+
+IndexedVertexes pyramidFromBase(IndexedVertexes base_polygon){
+    throw util::NotImplementedException();
+}
+
+IndexedVertexes regularPyramid(unsigned int base_sides) {
+    //what are the parameters?
+    // what if the base is irregular? in that case probably want a generic pyramid generator to make one from a provided base
+    //x/y/z ratio (1-1-1 for a )
+    throw util::NotImplementedException();
 }

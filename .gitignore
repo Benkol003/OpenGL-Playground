@@ -1,10 +1,4 @@
 .vs/
 .vscode/
 misc/
-build/*
-!build/shader.vs
-!build/shader.fs
-!build/texture_2D_0.jpg
-!build/texture_2D_1.jpg
-notes.txt
-run.bat
+build/

@@ -52,10 +52,10 @@ add_library(imgui STATIC ${IMGUI_SOURCES})
 target_link_libraries(imgui PRIVATE glfw)
 ### Target main ####
 
-set(SOURCES
-${CMAKE_SOURCE_DIR}/src/main.cpp
-${CMAKE_SOURCE_DIR}/src/procedural_meshes.cpp
-)
+file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/include.*.h ${CMAKE_SOURCE_DIR}/include/*.hpp)
+file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp) #glob recursive picks up cubes aswell
+
+list(APPEND SOURCES ${HEADERS}) #to show "Header Files" folder in VS
 
 add_executable(main ${SOURCES})
 
@@ -78,7 +78,7 @@ add_custom_command(
   TARGET main POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/resources/
-    $<TARGET_FILE_DIR:main>)
+    $<TARGET_PROPERTY:main,BINARY_DIR>/)
 
 
 ######

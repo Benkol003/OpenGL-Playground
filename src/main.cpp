@@ -65,13 +65,13 @@ try{
     ImGui_ImplOpenGL3_Init();
 
     //imgui out params
-    int divisionFactor=3;
+    int divisionFactor=10;
     float heightRatio = 1;
     const char* items[2] = { "Sphere", "Regular Prism"};
     int selected = 1;
-    bool onSelected = false;
+    bool anySelected = false;
 
-    auto data = genRegularPrism(divisionFactor,heightRatio);
+    auto data = regularPrism(divisionFactor,heightRatio);
 
     auto renderer = Renderer(data.vertexes,data.indexes);
     shader::init();
@@ -91,20 +91,23 @@ try{
         ImGui::NewFrame();
         ImGui::Begin("controls",NULL,ImGuiWindowFlags_AlwaysAutoResize);
 
+        anySelected = false;
         if (ImGui::BeginCombo("Select Mesh",items[selected],0)){
             for(int i=0; i < IM_ARRAYSIZE(items);++i){
-                if(ImGui::Selectable(items[i],&selected)) selected = i;
-                if(onSelected) printf("selected %d\n",selected);
+                bool onSelect = false;
+                if(ImGui::Selectable(items[i],&onSelect)) selected = i;
+                anySelected|=onSelect;
             }
             ImGui::EndCombo();
         }
 
-        if(onSelected || ImGui::SliderInt("triangle\ndivision\nfactor",&divisionFactor,3,64) || 
+        if(anySelected || ImGui::SliderInt("triangle\ndivision\nfactor",&divisionFactor,
+        selected == 1 ? 3 : 0,64) || //regular prism can have triangle as smallest cap - division factor determines n-polyhedron of cap
         (selected==1 && ImGui::SliderFloat("Height Ratio",&heightRatio,0.1,100) )){
             switch (selected){
-                case 0: data = genSphere(divisionFactor); break;
+                case 0: data = sphere(divisionFactor); break;
                 
-                case 1: data = genRegularPrism(divisionFactor,heightRatio); break;
+                case 1: data = regularPrism(divisionFactor,heightRatio); break;
             }
             renderer.updateData(data.vertexes,data.indexes);
         }
@@ -139,7 +142,7 @@ try{
     glfwTerminate();
     return 0;
 } catch(std::exception &e){
-    std::cerr<<"Exception: "<<e.what();
+    std::cerr<<"Exception in main: "<<typeid(e).name()<<": "<<e.what()<<'\n';
     glfwTerminate();
 }
 }
