@@ -45,6 +45,9 @@ try{
     glfwMakeContextCurrent(root);
     glfwSwapInterval(0); //disable vsync
     glfwSetKeyCallback(root,keys_callback);
+    glfwSetMouseButtonCallback(root, mouse::button_callback);
+    glfwSetCursorPosCallback(root, mouse::pos_callback);
+    glfwSetScrollCallback(root, mouse::scroll_callback);
 
     //initialise GLAD/GL
     int version = gladLoadGL(glfwGetProcAddress);

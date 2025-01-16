@@ -17,6 +17,41 @@ void init(){
     ;
 }
 
+namespace mouse {
+
+    glm::vec3 lastPos = { 0,0,0 };
+    glm::vec3 downClickPos = { 0,0,0 };
+    bool clickHeld = false;
+    float sensitivity = 1.0 / 200.0;
+
+    void pos_callback(GLFWwindow* window, double xpos, double ypos) {
+        glm::vec3 thisPos = { -xpos,ypos,0.0 };
+        if (clickHeld) {
+            glm::vec3 diff = (lastPos - thisPos) * sensitivity;
+            printf("mouse diff: %f, %f, %f\n", diff.x, diff.y, diff.z);
+            cameraTranslation = glm::translate(cameraTranslation, diff);
+        }
+        lastPos = thisPos;
+
+    }
+    void button_callback(GLFWwindow* window, int button, int action, int mods) {
+        if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
+            clickHeld = true;
+        }
+        if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE) {
+            clickHeld = false;
+        }
+    }
+
+    void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+        cameraTranslation = glm::translate(cameraTranslation, glm::vec3(xoffset, 0, yoffset));
+    }
+}
+
+
+
+
+
 void keys_callback(GLFWwindow* window,int key,int scancode,int action, int mods) { //idk what a scancode is
 
     int dv; //delta value to apply: +1 for key press, -1 for key release
