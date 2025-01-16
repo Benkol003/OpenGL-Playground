@@ -67,11 +67,11 @@ try{
     //imgui out params
     int divisionFactor=10;
     float heightRatio = 1;
-    const char* items[2] = { "Sphere", "Regular Prism"};
-    int selected = 1;
+    const char* items[3] = { "Sphere", "Cylinder", "Circle"};
+    int selected = 0;
     bool anySelected = false;
 
-    auto data = regularPrism(divisionFactor,heightRatio);
+    auto data = sphere(divisionFactor);
 
     auto renderer = Renderer(data.vertexes,data.indexes);
     shader::init();
@@ -82,7 +82,23 @@ try{
 
     bool wireframe=true;
 
+    float dt_acc = 0;
+    int fps = 0;
+
     while(!glfwWindowShouldClose(root)){
+        //dt and fps counter
+        timeOld = timeCurrent;
+        timeCurrent = glfwGetTime();
+        float dt = timeCurrent - timeOld;
+
+        //make the fps counter readable
+        dt_acc += dt;
+        if (dt_acc>0.125) {
+            fps = 1 / dt;
+            dt_acc = 0;
+        }
+       
+
         glfwPollEvents();
         //build immediate mode ui
         //TODO window doesnt automatically resize to fit widgets
@@ -90,6 +106,8 @@ try{
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ImGui::Begin("controls",NULL,ImGuiWindowFlags_AlwaysAutoResize);
+        ImGui::TextColored({ 1,1,0,1 }, "%d FPS", fps);
+        ImGui::TextColored({ 0,1,0,1 }, "Triangle Count: %d", data.indexes.size() / 3);
 
         anySelected = false;
         if (ImGui::BeginCombo("Select Mesh",items[selected],0)){
@@ -97,17 +115,20 @@ try{
                 bool onSelect = false;
                 if(ImGui::Selectable(items[i],&onSelect)) selected = i;
                 anySelected|=onSelect;
+                if (selected == 2 && divisionFactor > 16) divisionFactor = 16; //prevent overflow in circle generator
             }
             ImGui::EndCombo();
         }
 
         if(anySelected || ImGui::SliderInt("triangle\ndivision\nfactor",&divisionFactor,
-        selected == 1 ? 3 : 0,64) || //regular prism can have triangle as smallest cap - division factor determines n-polyhedron of cap
+        selected == 1 ? 3 : 1,selected == 2 ? 16 : 256) || //regular prism can have triangle as smallest cap - division factor determines n-polyhedron of cap. Also circle depth increases triangles exponentially
         (selected==1 && ImGui::SliderFloat("Height Ratio",&heightRatio,0.1,100) )){
             switch (selected){
                 case 0: data = sphere(divisionFactor); break;
                 
                 case 1: data = regularPrism(divisionFactor,heightRatio); break;
+
+                case 2: data = circle(divisionFactor);
             }
             renderer.updateData(data.vertexes,data.indexes);
         }
@@ -116,10 +137,8 @@ try{
         }
         ImGui::End();
 
-        //dt 
-        timeOld=timeCurrent;
-        timeCurrent=glfwGetTime();
-        float dt=timeCurrent-timeOld;
+
+
         //camera transform update
         glm::mat4 cameraMat;
         if(cameraRotationAxis!=glm::vec3(0)) cameraRotation = glm::rotate(glm::mat4(1), glm::radians(90*dt),cameraRotationAxis)*cameraRotation;

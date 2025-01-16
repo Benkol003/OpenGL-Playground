@@ -17,6 +17,8 @@ void deduplicateVertexes(IndexedVertexes data);
 IndexedVertexes triangleSubdivide(IndexedVertexes data);
 */
 
+IndexedVertexes circle(unsigned int);
+
 IndexedVertexes isocahedron(glm::vec3 ={0,0,0}, float =1);
 
 IndexedVertexes sphere(unsigned int =1, glm::vec3 ={0,0,0},float =1);

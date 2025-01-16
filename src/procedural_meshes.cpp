@@ -234,10 +234,68 @@ IndexedVertexes isocahedron(glm::vec3 origin, float scale){
     return {points,indexes};
 }
 
+//TODO should assume that the meshs is size
 IndexedVertexes sphere(unsigned int division_power,glm::vec3 origin,float scale){
     auto data = isocahedron(origin,scale);
     data = eqTrianglesSubdivide(data,division_power);
-    for(auto &i: data.vertexes) i=glm::normalize(i);//move vertex points to sphere surface
+    for(auto &i: data.vertexes) i=glm::normalize(i);//move vertex points from isocahedron surface to sphere surface 
+    return data;
+}
+
+//ways to make a circle:
+// * (least triangles) center triangle to circumference; add triangles on each side to touch circumference; do this recursively
+
+//less efficient methods:
+//triangle fan
+//triangle strip
+
+//warning - you dont need much depth - upto 5 - 6. Triangles double for each depth.
+//at depth 0 then provides 4 triangles
+IndexedVertexes circle(unsigned int depth){
+    
+    IndexedVertexes data;
+
+    //triangle and vertex count geometric series
+    unsigned int vcount = (3 * pow(2, depth)), tcount = 3 * pow(2, depth) - 2;
+    data.indexes.reserve(tcount*3);
+    data.vertexes.reserve(vcount);
+    
+    //all vertexes lie on the unit circle
+    //starting at 0 degrees assume equal step
+    
+    //at each depth have set of triangles of same size; always one that starts at 0 degrees
+    //and a ring of points; skips (d_max-d_current) points on the max depth ring to get the next point for the current depth ring
+    //then indexes are simply take 3 ahead; move forward 3.
+
+
+    //generate all points for the max depth ring
+    double angle = - M_PI;
+    for (int i=0; i < vcount; angle += 2.0 * M_PI / vcount, ++i) {
+        data.vertexes.push_back({cos(angle),sin(angle),0.0f});
+    }
+
+
+    //special case for depth = 0 / center triangle
+    {
+        unsigned int skip = vcount / 3;
+        for (int i = 0; i < 3; ++i) {
+            data.indexes.push_back(skip * i);
+        }
+    }
+
+    //for each depth ring
+    for (unsigned int depth_i = 1; depth_i <= depth; ++depth_i) {
+        unsigned int skip = vcount / (3 * pow(2, depth_i));
+        for (unsigned int vi = 0; vi < vcount-(2*skip); vi += skip*2) {
+            data.indexes.push_back(vi); data.indexes.push_back(vi + skip); data.indexes.push_back(vi + (2*skip));
+        }
+        //wraparound case for triangle that ends at vertex 0
+        data.indexes.push_back(vcount-(2*skip)); data.indexes.push_back(vcount-skip); data.indexes.push_back(0);
+    }
+
+    //assertion fails at higher depths / probably overflow due to an absurd number of triangles
+    assert(data.vertexes.size() == vcount);
+    assert(data.indexes.size() == tcount*3);
     return data;
 }
 
