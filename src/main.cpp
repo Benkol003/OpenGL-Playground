@@ -64,8 +64,13 @@ try{
     ImGui_ImplGlfw_InitForOpenGL(root,true);
     ImGui_ImplOpenGL3_Init();
 
+    //imgui out params
     int divisionFactor=3;
     float heightRatio = 1;
+    const char* items[2] = { "Sphere", "Regular Prism"};
+    int selected = 1;
+    bool onSelected = false;
+
     auto data = genRegularPrism(divisionFactor,heightRatio);
 
     auto renderer = Renderer(data.vertexes,data.indexes);
@@ -85,8 +90,22 @@ try{
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         ImGui::Begin("controls",NULL,ImGuiWindowFlags_AlwaysAutoResize);
-        if(ImGui::SliderInt("triangle\ndivision\nfactor",&divisionFactor,3,64) || ImGui::SliderFloat("Height Ratio",&heightRatio,0.1,100)){
-            data = genRegularPrism(divisionFactor,heightRatio);
+
+        if (ImGui::BeginCombo("Select Mesh",items[selected],0)){
+            for(int i=0; i < IM_ARRAYSIZE(items);++i){
+                if(ImGui::Selectable(items[i],&selected)) selected = i;
+                if(onSelected) printf("selected %d\n",selected);
+            }
+            ImGui::EndCombo();
+        }
+
+        if(onSelected || ImGui::SliderInt("triangle\ndivision\nfactor",&divisionFactor,3,64) || 
+        (selected==1 && ImGui::SliderFloat("Height Ratio",&heightRatio,0.1,100) )){
+            switch (selected){
+                case 0: data = genSphere(divisionFactor); break;
+                
+                case 1: data = genRegularPrism(divisionFactor,heightRatio); break;
+            }
             renderer.updateData(data.vertexes,data.indexes);
         }
         if(ImGui::Selectable("wireframe mode",&wireframe)){

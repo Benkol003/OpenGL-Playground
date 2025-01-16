@@ -34,7 +34,7 @@ glad_add_library(glad_gl_core_33 STATIC API gl:core=3.3)
 
 ### GLM ###
 add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
-find_package(glm CONFIG REQUIRED)
+add_subdirectory(${CMAKE_SOURCE_DIR}/lib/glm)
 
 ### imgui source ###
 set(IMGUI_DIR ${CMAKE_SOURCE_DIR}/lib/imgui/)
@@ -72,7 +72,7 @@ glm::glm
 
 target_link_libraries(main PUBLIC ${LIBS})
 
-### copy resources alognside executable
+### copy resources alongside executable
 
 add_custom_command(
   TARGET main POST_BUILD
