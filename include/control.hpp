@@ -21,24 +21,31 @@ namespace mouse {
 
     glm::vec3 lastPos = { 0,0,0 };
     glm::vec3 downClickPos = { 0,0,0 };
-    bool clickHeld = false;
+    bool lClickHeld = false;
+    bool rClickHeld = false;
     float sensitivity = 1.0 / 200.0;
 
     void pos_callback(GLFWwindow* window, double xpos, double ypos) {
+        if(ImGui::GetIO().WantCaptureMouse) return;
         glm::vec3 thisPos = { -xpos,ypos,0.0 };
-        if (clickHeld) {
-            glm::vec3 diff = (lastPos - thisPos) * sensitivity;
-            cameraTranslation = glm::translate(cameraTranslation, diff);
+        glm::vec3 diff = (lastPos - thisPos);
+        if (lClickHeld) {
+            cameraTranslation = glm::translate(cameraTranslation, diff*sensitivity);
+        }
+        if(rClickHeld){
+            cameraRotation = glm::rotate(glm::mat4(1), glm::radians(900 * sensitivity), glm::normalize(glm::vec3{-diff.y,diff.x,0.0})) * cameraRotation;
         }
         lastPos = thisPos;
 
     }
     void button_callback(GLFWwindow* window, int button, int action, int mods) {
-        if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
-            clickHeld = true;
+        if (button == GLFW_MOUSE_BUTTON_1) {
+            if(action == GLFW_PRESS) lClickHeld = true;
+            if(action == GLFW_RELEASE) lClickHeld = false;
         }
-        if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_RELEASE) {
-            clickHeld = false;
+        if (button == GLFW_MOUSE_BUTTON_2) {
+            if(action == GLFW_PRESS) rClickHeld = true;
+            if(action == GLFW_RELEASE) rClickHeld = false;
         }
     }
 
@@ -125,16 +132,12 @@ int map_key(const EmscriptenKeyboardEvent* keyEvent) {
 EM_BOOL key_callback_emscripten(int eventType, const EmscriptenKeyboardEvent* keyEvent, void* userData) {
     switch(eventType){
         case(EMSCRIPTEN_EVENT_KEYDOWN):
-        std::cout<<"keydown:";
         break;
         case(EMSCRIPTEN_EVENT_KEYPRESS):
-        std::cout<<"keypress:";
         break;
         case(EMSCRIPTEN_EVENT_KEYUP):
-        std::cout<<"keyup:";
         break;
     }
-    std::cout<<fmt::format("key input: {}",keyEvent->code)<<std::endl;
     // Map EmscriptenKeyboardEvent to GLFW-style parameters
     int key = map_key(keyEvent);       // Map the key using the custom function
     int scancode = keyEvent->code[0];  // Use the first character of the code as a scancode (arbitrary mapping)
@@ -148,6 +151,6 @@ EM_BOOL key_callback_emscripten(int eventType, const EmscriptenKeyboardEvent* ke
 
     keys_callback((GLFWwindow*)userData, key, scancode, action, mods);
 
-    return EM_FALSE;
+    return EM_TRUE;
 }
 #endif

@@ -121,6 +121,8 @@ int main(int argc, char **argv)
         static float dt_acc = 0;
         static int fps = 0;
 
+        static bool firstFrame = true; //used for init UI placement
+
 #ifdef __EMSCRIPTEN__
         main_loop_ptr = [&]()
         {
@@ -147,10 +149,30 @@ int main(int argc, char **argv)
             ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
-            ImGui::Begin("controls", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+
+            ImGui::Begin("help",NULL,ImGuiWindowFlags_AlwaysAutoResize);
+
+            ImGui::TextColored({1,1,1,1},"Controls:\n"
+            "AWSD keys or mouse right click hold + move mouse: object rotation\n"
+            "arrow keys or mouse left click hold + move mouse: object x/y translation\n"
+            "+- keys or mouse scroll wheel: object distance / z translation\n"
+            "Enter key: reset object position and rotation\n"
+            );
+
+            if(firstFrame){
+            ImGui::SetWindowPos({0,0},true);
+            //next window aligned underneath
+            ImVec2 currentWindowSize = ImGui::GetWindowSize();
+            ImGui::SetNextWindowPos({0,currentWindowSize.y+70},true); //TODO why isnt it perfectly aligned under with +0
+            //TODO the imgui ini file would be better but we cant load it atm in emscripten
+            firstFrame = false;
+            }
+            ImGui::End();
+
+
+            ImGui::Begin("object controls", NULL, ImGuiWindowFlags_AlwaysAutoResize);
             ImGui::TextColored({1, 1, 0, 1}, "%d FPS", fps);
             ImGui::TextColored({0, 1, 0, 1}, "Triangle Count: %d", data.indexes.size() / 3);
-
             anySelected = false;
             if (ImGui::BeginCombo("Select Mesh", items[selected], 0))
             {
@@ -176,6 +198,7 @@ int main(int argc, char **argv)
                     break;
 
                 case 1:
+                    if(divisionFactor<3) divisionFactor = 3;
                     data = regularPrism(divisionFactor, heightRatio);
                     break;
 

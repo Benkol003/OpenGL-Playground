@@ -25,8 +25,6 @@ IndexedVertexes sphere(unsigned int =1, glm::vec3 ={0,0,0},float =1);
 
 IndexedVertexes regularPrism(unsigned int,float = 2.0f);
 
-IndexedVertexes pyramidFromBase(IndexedVertexes);
-
 IndexedVertexes regularPyramid(unsigned int);
 
 IndexedVertexes toWireframe(IndexedVertexes data);
