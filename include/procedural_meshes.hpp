@@ -28,3 +28,5 @@ IndexedVertexes regularPrism(unsigned int,float = 2.0f);
 IndexedVertexes pyramidFromBase(IndexedVertexes);
 
 IndexedVertexes regularPyramid(unsigned int);
+
+IndexedVertexes toWireframe(IndexedVertexes data);

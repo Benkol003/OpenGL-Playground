@@ -11,13 +11,12 @@
 #include <unordered_map>
 #include <functional>
 
-#include "util.hpp"
 #include "procedural_meshes.hpp"
 #include "glm/vec3.hpp"
 #include "glm/geometric.hpp"
 
 /*
-FUNCTION COMPLIANCE RULES:
+RULES FOR GENERATED MESHES:
 - must be centered around the origin
 - must have consistent winding of anticlockwise for front-facing vertexes
 - all generated meshes must fit within axii range [-1,1] i.e. 2x2x2 box. Ideally at least two vertexes covering that range in one axis.
@@ -362,12 +361,32 @@ IndexedVertexes regularPrism(unsigned int circumference_divisions,float heightRa
 }
 
 IndexedVertexes pyramidFromBase(IndexedVertexes base_polygon){
-    throw util::NotImplementedException();
+    throw std::runtime_error("no impl");
 }
 
 IndexedVertexes regularPyramid(unsigned int base_sides) {
     //what are the parameters?
     // what if the base is irregular? in that case probably want a generic pyramid generator to make one from a provided base
     //x/y/z ratio (1-1-1 for a )
-    throw util::NotImplementedException();
+    throw std::runtime_error("not impl");
+}
+
+/* 
+unfortunately you cant use geometry shaders or use glPolygonMode in webgl/gl ES
+so this is the only alternative for emscripten
+with this we also dont get backface culling
+*/
+IndexedVertexes toWireframe(IndexedVertexes data){
+    IndexedVertexes ret;
+    ret.vertexes = data.vertexes;
+    ret.indexes.reserve(data.indexes.size() * 2);
+
+    for(int i=0; i<data.indexes.size();i+=3){
+        ret.indexes.insert(ret.indexes.end(),{
+            data.indexes[i],data.indexes[i+1],
+            data.indexes[i+1],data.indexes[i+2],
+            data.indexes[i+2],data.indexes[i]
+        });
+    }
+    return ret;
 }

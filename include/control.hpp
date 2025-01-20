@@ -28,7 +28,6 @@ namespace mouse {
         glm::vec3 thisPos = { -xpos,ypos,0.0 };
         if (clickHeld) {
             glm::vec3 diff = (lastPos - thisPos) * sensitivity;
-            printf("mouse diff: %f, %f, %f\n", diff.x, diff.y, diff.z);
             cameraTranslation = glm::translate(cameraTranslation, diff);
         }
         lastPos = thisPos;
@@ -53,8 +52,9 @@ namespace mouse {
 
 
 void keys_callback(GLFWwindow* window,int key,int scancode,int action, int mods) { //idk what a scancode is
-
-    int dv; //delta value to apply: +1 for key press, -1 for key release
+    int dv; //delta value to apply: +1 for key press, 0 for key release
+    //holding two keys at once doesnt cancel like it did using +/-1 and += / -=
+    //but solves repeating key problem
 
     if(action==GLFW_PRESS){
         switch(key){
@@ -71,39 +71,83 @@ void keys_callback(GLFWwindow* window,int key,int scancode,int action, int mods)
 
         dv=1;
     
-    } else if(action==GLFW_RELEASE) dv=-1;
+    } else if(action==GLFW_RELEASE) dv=0;
     else return;
 
     switch(key){
             //rotation keybinds
             case GLFW_KEY_W:
-            cameraRotationAxis.x-=dv; break;
+            cameraRotationAxis.x=-dv; break;
             case GLFW_KEY_S:
-            cameraRotationAxis.x+=dv; break;
+            cameraRotationAxis.x=dv; break;
             case GLFW_KEY_A:
-            cameraRotationAxis.y-=dv; break;
+            cameraRotationAxis.y=-dv; break;
             case GLFW_KEY_D:
-            cameraRotationAxis.y+=dv; break;
+            cameraRotationAxis.y=dv; break;
             case GLFW_KEY_Q:
-            cameraRotationAxis.z+=dv; break;
+            cameraRotationAxis.z=dv; break;
             case GLFW_KEY_E:
-            cameraRotationAxis.z-=dv; break;
+            cameraRotationAxis.z=-dv; break;
 
             //translations
             case GLFW_KEY_UP:
-            cameraTranslateDirection.y+=dv; break;
+            cameraTranslateDirection.y=dv; break;
             case GLFW_KEY_DOWN:
-            cameraTranslateDirection.y-=dv; break;
+            cameraTranslateDirection.y=-dv; break;
             case GLFW_KEY_LEFT:
-            cameraTranslateDirection.x-=dv; break;
+            cameraTranslateDirection.x=-dv; break;
             case GLFW_KEY_RIGHT:
-            cameraTranslateDirection.x+=dv; break;
+            cameraTranslateDirection.x=dv; break;
             case GLFW_KEY_MINUS:
-            cameraTranslateDirection.z-=dv; break;
+            cameraTranslateDirection.z=-dv; break;
             case GLFW_KEY_EQUAL:
             cameraTranslateDirection.z+=dv; break;
     }
 
+    //helps deal with repeated key presses; normalisation prevents accumulated dv
+
     //
 
 }
+
+#ifdef __EMSCRIPTEN__
+// Function to map Emscripten's key names to GLFW-style key codes
+//TODO chatGPT generated slop that hasent been checked
+int map_key(const EmscriptenKeyboardEvent* keyEvent) {
+    if (strcmp(keyEvent->key, "ArrowLeft") == 0) return 263;  // GLFW_KEY_LEFT
+    if (strcmp(keyEvent->key, "ArrowRight") == 0) return 262; // GLFW_KEY_RIGHT
+    if (strcmp(keyEvent->key, "ArrowUp") == 0) return 265;    // GLFW_KEY_UP
+    if (strcmp(keyEvent->key, "ArrowDown") == 0) return 264;  // GLFW_KEY_DOWN
+    return keyEvent->keyCode;  // Default mapping for regular keys (e.g., 'A' -> 65)
+}
+
+// Emscripten wrapper for key events
+EM_BOOL key_callback_emscripten(int eventType, const EmscriptenKeyboardEvent* keyEvent, void* userData) {
+    switch(eventType){
+        case(EMSCRIPTEN_EVENT_KEYDOWN):
+        std::cout<<"keydown:";
+        break;
+        case(EMSCRIPTEN_EVENT_KEYPRESS):
+        std::cout<<"keypress:";
+        break;
+        case(EMSCRIPTEN_EVENT_KEYUP):
+        std::cout<<"keyup:";
+        break;
+    }
+    std::cout<<fmt::format("key input: {}",keyEvent->code)<<std::endl;
+    // Map EmscriptenKeyboardEvent to GLFW-style parameters
+    int key = map_key(keyEvent);       // Map the key using the custom function
+    int scancode = keyEvent->code[0];  // Use the first character of the code as a scancode (arbitrary mapping)
+    int action = (eventType == EMSCRIPTEN_EVENT_KEYDOWN || eventType == EMSCRIPTEN_EVENT_KEYPRESS) ? 1 : 0; // KeyDown = 1, KeyUp = 0
+    int mods = 0;
+
+    // Map modifier keys to a bitmask for mods
+    if (keyEvent->shiftKey) mods |= 1; // Shift key
+    if (keyEvent->ctrlKey) mods |= 2;  // Ctrl key
+    if (keyEvent->altKey) mods |= 4;   // Alt key
+
+    keys_callback((GLFWwindow*)userData, key, scancode, action, mods);
+
+    return EM_FALSE;
+}
+#endif
