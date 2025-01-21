@@ -29,7 +29,7 @@
 
 #include "procedural_meshes.hpp"
 #include "shader.hpp"
-#include "renderer.hpp"
+#include "raytracer.hpp"
 #include "control.hpp"
 
 const int WINDOW_SIZE[2] = {900, 900};
@@ -226,11 +226,7 @@ int main(int argc, char **argv)
 
             glClearColor(0.f, 0.f, 0.f, 0.f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            if(wireframe){
-                glDrawElements(GL_LINES, data_wireframe.indexes.size(), GL_UNSIGNED_INT, 0);
-            }else{
-                glDrawElements(GL_TRIANGLES, data.indexes.size(), GL_UNSIGNED_INT, 0);
-            }
+            glDrawArrays(GL_TRIANGLES,0,3);
 
             ImGui::Render();
             ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

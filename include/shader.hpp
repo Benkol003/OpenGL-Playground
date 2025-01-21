@@ -123,8 +123,8 @@ std::string read_file(const char* path){
 
 namespace shader{
 
-    static constexpr char vshader_path[] = "shader.vs";
-    static constexpr char fshader_path[] = "shader.fs";
+    static constexpr char vshader_path[] = "raytracer.vs";
+    static constexpr char fshader_path[] = "raytracer.fs";
     unsigned int shader_program;
     unsigned int u_transform;
 
@@ -179,7 +179,7 @@ namespace shader{
         //setup attributes and uniforms
         glVertexAttribPointer(0,3,GL_FLOAT,false,3*sizeof(float), (void*)(0) ); //position shader attribute
         glEnableVertexAttribArray(0);
-        u_transform=glGetUniformLocation(shader_program,"u_transform");
+        //u_transform=glGetUniformLocation(shader_program,"u_transform");
 
     }
 }
