@@ -11,11 +11,10 @@ index and vertex data respectfully
 
  */
 
-
-
 #pragma once
 #include <vector>
 #include "glm/vec3.hpp"
+#include "glm/gtc/type_aligned.hpp"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -50,23 +49,20 @@ class Renderer{
         };
         glBufferData(GL_ARRAY_BUFFER,sizeof(glm::vec3)*3,screen,GL_STATIC_DRAW);
 
-        //TODO data needs to be aligned; cant use vec3.
-        //aligned with GLM_CONFIG_ALIGNED_GENTYPES with GLM_FORCE_DEFAULT_ALIGNED_GENTYPES?
-        //this still doesnt align vec3's
-        //or use vec<3,float,aligned_defaultp> with GLM_CONFIG_ALIGNED_GENTYPES 
-        glm::vec4 triangle[3] = {
-            {-0.75,-0.75,0,0},
-            {0.75,-0.75,0,0},
-            {0,0.75,0,0},
+        //data in SSBO needs to be aligned to 16 bytes
+        glm::aligned_vec3 triangle[3] = {
+            {-0.75,-0.75,0,},
+            {0.75,-0.75,0,},
+            {0,0.75,0,},
         };
 
         glGenBuffers(1, &SSBO);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, SSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW); //sizeof(data) only works for statically sized C/C++ arrays.
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(triangle), triangle, GL_STATIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, SSBO);
 
-        //glEnable(GL_DEPTH_TEST);
-        //glEnable(GL_CULL_FACE);
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
     }
 
     void updateIndexes(std::vector<unsigned int>& indicies){

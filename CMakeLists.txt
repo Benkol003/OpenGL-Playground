@@ -40,9 +40,7 @@ endif()
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/fmt/)
 
 ### GLM ###
-set(GLM_FORCE_ALIGNED_GENTYPES 1)
-add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
-set(GLM_FORCE_INTRINSICS 1)
+add_definitions(-DGLM_ENABLE_EXPERIMENTAL -DGLM_FORCE_ALIGNED_GENTYPES -DGLM_FORCE_INTRINSICS)
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/glm)
 
 ### imgui source ###
