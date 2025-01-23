@@ -40,7 +40,9 @@ endif()
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/fmt/)
 
 ### GLM ###
+set(GLM_FORCE_ALIGNED_GENTYPES 1)
 add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
+set(GLM_FORCE_INTRINSICS 1)
 add_subdirectory(${CMAKE_SOURCE_DIR}/lib/glm)
 
 ### imgui source ###
@@ -102,17 +104,16 @@ target_link_libraries(main PUBLIC ${LIBS})
 ### copy shader alongside executable
 
 if(EMSCRIPTEN)
-add_custom_command(
-  TARGET main POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/resources/ES/
-    $<TARGET_PROPERTY:main,BINARY_DIR>/)
+add_custom_target(copy_shaders ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/ES/ ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Copying shaders to build"
+)
 else()
-add_custom_command(
-  TARGET main POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_SOURCE_DIR}/resources/
-    $<TARGET_PROPERTY:main,BINARY_DIR>/)
+add_custom_target(copy_shaders ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/resources/ ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Copying shaders to build"
+)
 endif()
+
 
 ######
